@@ -2,7 +2,7 @@ const PENDING = 'pending'
 const FULFILLED = 'fulfilled'
 const REJECTED = 'rejected'
 
-class PromiseA {
+export default class PromiseA{
   constructor(executor) {
     this.status = PENDING
     this.value = undefined
@@ -33,7 +33,7 @@ class PromiseA {
       if (this.status === PENDING) {
         this.status = REJECTED
         this.reason = reason
-        this.rejectedCallbacks.forEach(reject => reject(value))
+        this.rejectedCallbacks.forEach(reject => reject(reason))
       }
     })
   }
@@ -111,8 +111,56 @@ class PromiseA {
   catch(onRejected) {
     return this.then(null, onRejected)
   }
+
+  finally(cb) {
+    return this.then(
+      value => PromiseA.resolve(cb()).then(() => value),
+      reason = PromiseA.resolve(cb()).then(() => {throw reason})
+    )
+  }
+  
 } 
 
-// module.exports = PromiseA
+PromiseA.resolve = function (value) {
+  return new PromiseA((resolve, reject) => {
+    if (value instanceof PromiseA) {
+      value.then(resolve, reject)
+    } else {
+      resolve(value)
+    }
+  })
+}
 
-export let a = 3
+PromiseA.reject = function(reason) {
+  return new PromiseA((resolve, reject) => {
+    reject(reason)
+  })
+}
+
+PromiseA.all = function(promises) {
+  if (!promises.hasOwnProperty(Symbol.iterator)) {
+    PromiseA.reject(new TypeError('object is not iterable (cannot read property Symbol(Symbol.iterator))'))
+  }
+  return new PromiseA((resolve, reject) => {
+    const values = []
+    promises.forEach(p => {
+      p.then(value => {
+        values.push(value)
+        if (values.length === promises.length) {
+          resolve(values)
+        }
+      }, reason => {
+        reject(reason)
+      })
+    })
+  })
+}
+
+PromiseA.race = function(promises) {
+  return new PromiseA((resolve, reject) => {
+    promises.forEach(p => {
+      p.then(value => resolve(value),
+      reason => reject(reason))
+    })
+  })
+}
