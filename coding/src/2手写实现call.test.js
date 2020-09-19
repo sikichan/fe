@@ -1,4 +1,4 @@
-import '../2手写实现call.js'
+import './2手写实现call.js'
 import {expect} from 'chai'
 let r = Math.max.callFn({}, 35, '59',6)
 console.log(r)

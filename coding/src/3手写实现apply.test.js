@@ -1,4 +1,4 @@
-import '../3手写实现apply.js'
+import './3手写实现apply.js'
 import {expect} from 'chai'
 let r = Math.max.applyFn2({}, [35, '59',6])
 console.log(r)

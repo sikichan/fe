@@ -1,5 +1,5 @@
 import {expect} from 'chai'
-import '../4手写实现bind.js'
+import './4手写实现bind.js'
 
 let f = Math.max.bindFn2({}, 35, '59',6)
 console.log(f())
