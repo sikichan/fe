@@ -1,10 +1,14 @@
 {
+  "scripts": {
+    "test": "promises-aplus-tests src/5手写实现Promise.js"
+  },
   "devDependencies": {
-    "@babel/preset-env": "^7.11.5"
+    "@babel/preset-env": "^7.11.5",
+    "promises-aplus-tests": "^2.1.2"
   },
   "dependencies": {
-    "@babel/node": "^7.10.5",
     "@babel/core": "^7.11.6",
+    "@babel/node": "^7.10.5",
     "chai": "^4.2.0"
   }
 }
