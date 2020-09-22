@@ -15,6 +15,8 @@ export function create(ClassName, ...rest) {
   let obj = Object.create(ClassName.prototype)
   // 4
   let result = ClassName.apply(obj, rest)
-  // 5 null\undefined are not instances of Object
-  return result instanceof Object ? result : obj
+  // 5 
+  return result && typeof result === 'object' 
+      || typeof result === 'function' 
+      ? result : obj
 }
