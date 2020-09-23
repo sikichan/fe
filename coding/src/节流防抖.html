@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    div {
+      margin: 0 auto;
+      height: 400px;
+      width: 400px;
+      background: #c0c0c0;
+      overflow-y: auto;
+    }
+    button{
+      margin: 30px auto;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="div"></div>
+  <button>点 我 啊</button>
+  <script>
+    function render() {
+      const div = document.querySelector('#div')
+      const fragment = new DocumentFragment()
+      for(let i = 0; i < 1000; i++) {
+        const p = document.createElement('p')
+        p.textContent = 'hello world'
+        fragment.appendChild(p)
+      }
+      div.appendChild(fragment)
+    }
+    render()
+
+    // 节流：单位时间里多次触发事件，只有执行一次回调，单位时间内多次触发，只有执行第一次触发的回调
+    // 加个flag标记
+    function throttle(fn, delay) {
+      let timer = null
+      let flag = false
+      return function() {
+        if (flag) return
+        flag = true
+        clearTimeout(timer)
+        timer = setTimeout(() => {
+          fn.call(this, ...arguments)
+          flag = false
+        }, delay)
+      }
+    }
+
+    // 防抖：事件触发 n 秒后再去执行回调，n 秒内再次触发事件，计时器应重新计时
+    function debounce(fn, delay) {
+      let timer = null
+      return function() {
+        if (timer) clearTimeout(timer)
+        timer = setTimeout(() => {
+          fn.apply(this, ...arguments)
+        }, delay)
+      }
+    }
+
+    const btn = document.querySelector('button')
+    btn.onclick = debounce(function() {
+      console.log(' You clicked me ! ', this)
+    }, 600)
+
+    div.addEventListener('scroll', throttle(function() {
+      console.log('滚动了div', this)
+    }, 1000))
+
+  </script>
+</body>
+
+</html>
