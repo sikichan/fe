@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    ul {
+      list-style: none;
+      width: 200px;
+      height: 200px;
+      margin: 20px auto;
+    }
+    li {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: pink;
+    }
+  </style>
+</head>
+<body>
+  <ul>
+    <li><span>1</span></li>
+    <li><span>2</span></li>
+    <li><span>3</span></li>
+    <li><span>4</span></li>
+  </ul>
+</body>
+<script>
+  function delegate(ele, eventType, selector, fn) {
+    ele.addEventListener(eventType, e => {
+      let el = e.target
+      while(!el.matches(selector)) {
+        if (ele === el) {
+          break
+        }
+        el = el.parentNode
+      }
+      el && fn.call(el, e)
+    }, true)
+    return ele
+  }
+  const ul = document.querySelector('ul')
+  delegate(ul, 'click', 'ul', function(e, el) {console.log(e.target)})
+</script>
+</html>
