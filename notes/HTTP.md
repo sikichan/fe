@@ -133,10 +133,55 @@ DNT： Do Not Track 拒绝个人信息被收集， 拒绝被精确广告追踪
       0: 同意被追踪
       1：拒绝
 
-# 浏览器的同源策略
-**同源：** [协议] [域名] [端口号] 相同
-目的: 为了保证用户信息的安全，防止恶意网站窃取数据
-同源限制: 
-      1) Cookie，IndexDB, LocalStorage 无法获取
-      2) 无法获得DOM
-      3) 无法发送ajax请求
+# 浏览器策略
+同源政策：主要表现在DOM，Web数据，和网络三个层面
+1) 不同源的脚本不能访问和操作当前的DOM
+2) 不同源的脚本不能访问Cookie, IndexDB, LocalStorage等数据。window.open()打开的和iframe窗口都无法与父窗口通信
+3) 不同源不能发送AJAX请求
+
+**同源：**协议://域名:端口 都相同
+
+## 跨域的方法
+
+1. 如果两个窗口的一级域名相同，二级域名不同，可以设置document.domain=一级域名。这样子域名都可以共享cookie
+2. 片段识别符(url # 后面的部分)，改变不会导致页面刷新。可以通过改变iframe.src=，然后iframe监听hashchange事件
+3. window.postMessage(message, origin)
+   父窗口和子窗口都监听message事件，都是通过postMessage()发送消息
+
+**解决AJAX请求的跨源问题：**
+4. 正向代理，架设一台代理服务器，浏览器请求到这个同源的服务器，再由这个代理服务器转发请求到外部服务器，因为服务器之间没有同源政策
+5. JSONP，利用 <script> 标签的src加载脚本不受同源政策的影响。只能发送GET请求
+   <script src="http://xxx.com/jsonp?callback=foo">
+   服务器接收到请求，把要返回给客户端的数据放到回调函数参数的位置
+   let callback = ctx.query.callback
+   ctx.body = callback + "(" JSON.stringfy(data) + ")"
+
+6. WebSocket通信协议，ws://非加密，wss://加密 前缀
+  该协议不实行同源政策，只要服务器支持，就可以使用它进行跨源通信
+  Upgrade: websocket
+  Connection: Upgrade
+  Origin: 
+  Sec-WebSocket-Key:
+  Sec-WebSocket-Protocol:
+
+7. CORS(跨域资源共享)，浏览器自动支持跨域，所以只要服务器允许跨域就可以通信
+  浏览器自动加上请求首部Origin字段，服务器检查请求的源如果在指定源中，则同意跨域请求。
+  响应加上首部字段Access-Control-Allow-Origin: '*' 或者 'http://aaa.com'
+  浏览器再发送跨域请求时，会把请求分为简单请求和非简单请求两种。
+  **简单请求：**
+  1) GET，POST，HEAD之一
+  2) 并且请求头只有以下字段
+      Access, Access-Language, Content-Language, Content-Type只能是application/x-www-form-urlencoded, multipart/form-data, text/plain
+  
+  浏览器判断为简单请求，就直接发送CORS请求。如果非简单请求，则会发送一个预检请求(OPTIONS), 
+  加上请求首部：
+  Access-Control-Request-Method: PUT 正式请求时会使用什么HTTP方法
+  Access-Control-Request-Headers: x-token 正式请求时会发送哪些自定义请求头
+
+  服务器对预检请求作出响应：
+  成功，服务器同意这次预检请求，会返回一些响应头信息：
+  Access-Control-Allow-Methods: PUT,POST 允许访问资源的所有HTTP方法
+  Access-Control-Allow-Credentials: true 是否允许发送cookie
+  
+
+

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="Observer.js"></script>
+  <script src="Compiler.js"></script>
+  <script src="Vue.js"></script>
+</head>
+<body>
+  <div id="app">
+    <p> {{arr}}
+      <span v-text="msg"></span>
+      <input v-model="msg">
+    </p>
+  </div>
+  <script>
+    const vm = new Vue({
+      el: '#app',
+      data: {
+        msg: 'hello vue',
+        obj: {
+          a: 'a'
+        },
+        arr: [1,2],
+        header: '标题'
+      },
+      methods: {
+
+      }
+    })
+    console.log(vm);
+  </script>
+</body>
+</html>
