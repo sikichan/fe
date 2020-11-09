@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vue2实现原理</title>
+</head>
+<body>
+  <div id="app">
+    <p>{{msg}}  静态文本</p>
+    <div>
+      <span v-text="label"></span>
+      <!-- 这是注释-->
+      {{user.name}} -- {{user.age}}
+    </div>
+    <button v-text="btnName" v-on:click="handleClick"></button>
+  </div>
+  <script src="Observer.js"></script>
+  <script src="Compile.js"></script>
+  <script src="MVue.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2.6.9/dist/vue.js"></script> -->
+  <script>
+    const app = new MVue({
+      el: '#app',
+      data: {
+        msg: 'hello vue2',
+        user: {
+          name: 'siki', age: 14
+        },
+        btnName: '岁数加一',
+        label: '个人信息：'
+      },
+      methods: {
+        handleClick() {
+          this.user.age++
+        }
+      },
+    })
+  </script>
+</body>
+</html>
