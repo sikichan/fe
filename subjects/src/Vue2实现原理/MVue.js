@@ -6,10 +6,10 @@ class MVue {
     if (this.$el) {
       // 数据代理 vm.a -> vm.$data.a
       this.proxyData(this.$data)
-      // 编译模板指令
-      new Compiler(this.$el, this)
       // 劫持所有属性的setter/getter
       new Observer(this.$data)
+      // 编译模板指令
+      new Compiler(this.$el, this)
     }
   }
   proxyData(data) {
@@ -19,11 +19,11 @@ class MVue {
         configurable: false,
         enumerable: true,
         get() {
-          return val
+          return data[key]
         },
         set(newVal) {
           if (newVal === val) return
-          val = newVal
+          data[key] = newVal
         }
       })
     })

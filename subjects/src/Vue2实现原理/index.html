@@ -8,8 +8,12 @@
 <body>
   <div id="app">
     <p v-bind:id="pid">{{msg}}  静态文本</p>
+    <div v-html="htmlStr"></div>
     <div>
-      <span v-text="label"></span>
+      <p v-text="label"></p>
+      <input v-model="msg">
+      <input type="checkbox" v-model="flag">
+      {{flag}}
       <!-- 这是注释-->
       {{user.name}} -- {{user.age}}
     </div>
@@ -23,8 +27,10 @@
     const app = new MVue({
       el: '#app',
       data: {
+        flag: false,
         pid: 'pid134',
         msg: 'hello vue2',
+        htmlStr: '<h1>标题</h1>',
         user: {
           name: 'siki', age: 14
         },
@@ -34,6 +40,7 @@
       methods: {
         handleClick() {
           this.user.age ++
+          // this.user.name = 'aqi'
         }
       },
     })

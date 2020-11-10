@@ -5,7 +5,7 @@ const CompileUtil = {
     }, vm)
   },
   setExprVal(vm, expr, val) {
-    return expr.split('.').reduce((pre, cur) => {
+    expr.split('.').reduce((pre, cur) => {
       pre[cur] = val
     }, vm)
   },
@@ -13,19 +13,48 @@ const CompileUtil = {
     const attrName = propName ? `v-${directive}:${propName}`: `v-${directive}`
     node.removeAttribute(attrName)
   },
-  text(node, expr, vm, mustacheExpr) {
+  text(node, expr, vm) {
     const value = this.getExprVal(vm, expr)
-    if (mustacheExpr) {
-      this.updater.mustacheUpdater(node, value, mustacheExpr)
-    } else {
-      this.updater.textUpdater(node, value)
-      this.removeDir(node, 'text')
-    }
+    new Watcher(vm, expr, (newVal) => {
+      this.updater.textUpdater(node, newVal)
+    })
+    this.updater.textUpdater(node, value)
+    this.removeDir(node, 'text')
+  },
+  getContentVal(vm, expr) {
+    return expr.replace(/\{\{(.+?)\}\}/g, (...args) => {
+      return this.getExprVal(vm, args[1])
+    })
+  },
+  textcontent(node, vm) {
+    // todo: 整理思路重新写
+    // let value
+    let value = node.textContent
+    let result = value.replace(/\{\{(.+?)\}\}/g, (...args) => {
+      new Watcher(vm, args[1], () => {
+        this.updater.textUpdater(node, this.getContentVal(vm, value))
+      })
+      return this.getExprVal(vm, args[1])
+    })
+    this.updater.textUpdater(node, result)
   },
   html(node, expr, vm) {
     const value = this.getExprVal(vm, expr)
-    this.updater.textUpdater(node, value)
+    new Watcher(vm, expr, (newVal) => {
+      this.updater.htmlUpdater(node, newVal)
+    })
+    this.updater.htmlUpdater(node, value)
     this.removeDir(node, 'html')
+  },
+  model(node, expr, vm) {
+    const value = this.getExprVal(vm, expr)
+    node.value = value
+    new Watcher(vm, expr, (newVal) => {
+      this.updater.modelUpdater(node, newVal)
+    })
+    node.addEventListener('input', (e) => {
+      this.setExprVal(vm, expr, e.target.value)
+    })
   },
   bind(node, expr, vm, propName) {
     // v-bind:id="uid"
@@ -42,16 +71,15 @@ const CompileUtil = {
     textUpdater(node, value) {
       node.textContent = value
     },
+    modelUpdater(node, value) {
+      node.value = value
+    },
     htmlUpdater(node, value) {
       node.innerHTML = value
     },
     bindUpdater(node, propName, value) {
       node.setAttribute(propName, value)
-    },
-    mustacheUpdater(node, value, mustacheExpr) {
-      console.log(`replace: ${mustacheExpr} with: ${value}`)
-      node.textContent = node.textContent.replace(mustacheExpr, value)
-    },
+    }
   }
 }
 
@@ -78,17 +106,15 @@ class Compiler {
     return node.nodeType === Node.TEXT_NODE
   }
   isDirective(attrName) {
-    return attrName.indexOf('v-') !== -1
+    return attrName.startsWith('v-')
   }
   compile(fragment) {
     const childNodes = fragment.childNodes
     childNodes.forEach(node => {
       if (this.isElementNode(node)) {
-        console.log('元素：', node)
         this.compileElement(node)
       } else if (this.isTextNode(node)) {
-        console.log('文本：', node)
-        this.compileText(node)
+        this.compileTextContent(node)
       }
       if (node.childNodes && node.childNodes.length) {
         this.compile(node) // 递归编译每个子节点
@@ -103,20 +129,60 @@ class Compiler {
       if (this.isDirective(attrName)) {
         const [, dir] = attrName.split('v-')
         const [directive, propName] = dir.split(':')
-        console.log('指令：', directive, '事件名|特性名：', propName)
         CompileUtil[directive](node, attr.value, this.vm, propName)
         // node.removeAttributeNode(attr)
       }
     })
   }
-  compileText(node) {
+  compileTextContent(node) {
+    console.log(`文本: ${node.textContent}`)
+    // CompileUtil['text'](node, expr, this.vm) // {{user.name}}
+    CompileUtil['textcontent'](node, this.vm)
     // {{user.name}} -- {{user.age}}
-    node.textContent.replace(/\{\{([\.\w\s]+)\}\}/g, (...args) => {
-      console.log('expr:',args[1])
-      const expr = args[1].trim()
-      CompileUtil['text'](node, expr, this.vm, args[0])
-    })
+    // node.textContent = node.textContent.replace(/\{\{(.+?)\}\}/g, (...args) => {
+    //   const expr = args[1].trim()
+    //   console.log(`表达式：${expr};; content: ${node.textContent}`)
+    //   CompileUtil['text'](node, expr, this.vm) // {{user.name}}
+    // })
     
   }
 }
-
+class Dep {
+  constructor() {
+    this.subs = []
+  }
+  addSub(watcher) {
+    this.subs.push(watcher)
+  }
+  removeSub(watcher) {
+    // const idx = this.subs.indexOf(watcher)
+    // return this.subs.splice(idx, 1)
+  }
+  notify() {
+    this.subs.forEach(watcher => {
+      watcher.update()
+    })
+  }
+}
+class Watcher {
+  constructor(vm, expr, cb) {
+    this.vm = vm
+    this.expr = expr
+    this.cb = cb
+    this.oldVal = this.getOldVal()
+  }
+  getOldVal() {
+    Dep.target = this
+    let oldVal = CompileUtil.getExprVal(this.vm, this.expr)
+    Dep.target = null
+    return oldVal
+  }
+  update() {
+    const newVal = CompileUtil.getExprVal(this.vm, this.expr)
+    if (newVal !== this.oldVal) {
+      // console.log(`newVal: ${newVal}, oldVal: ${this.oldVal}`)
+      // 数据更新了
+      this.cb(newVal, this.oldVal)
+    }
+  }
+}
