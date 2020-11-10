@@ -9,7 +9,6 @@ class Observer {
         this.defineReactive(data, key, data[key])
       })
     }
-    
   }
   defineReactive(obj, key, value) {
     this.observe(value)
@@ -17,13 +16,11 @@ class Observer {
       configurable: false,
       enumerable: true,
       get() {
-        console.log('取数据');
         return value
       },
       set: (val) => {
         this.observe(val)
         if (val !== value) {
-          console.log(`key修改了: ${val}`)
           value = val
         }
       }

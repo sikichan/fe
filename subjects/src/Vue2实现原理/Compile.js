@@ -2,7 +2,16 @@ const CompileUtil = {
   getExprVal(vm, expr) {
     return expr.split('.').reduce((pre, cur) => {
       return pre[cur]
-    }, vm.$data)
+    }, vm)
+  },
+  setExprVal(vm, expr, val) {
+    return expr.split('.').reduce((pre, cur) => {
+      pre[cur] = val
+    }, vm)
+  },
+  removeDir(node, directive, propName) {
+    const attrName = propName ? `v-${directive}:${propName}`: `v-${directive}`
+    node.removeAttribute(attrName)
   },
   text(node, expr, vm, mustacheExpr) {
     const value = this.getExprVal(vm, expr)
@@ -10,18 +19,24 @@ const CompileUtil = {
       this.updater.mustacheUpdater(node, value, mustacheExpr)
     } else {
       this.updater.textUpdater(node, value)
+      this.removeDir(node, 'text')
     }
   },
-  
   html(node, expr, vm) {
     const value = this.getExprVal(vm, expr)
     this.updater.textUpdater(node, value)
+    this.removeDir(node, 'html')
   },
-  bind(node, expr, vm) {
-
+  bind(node, expr, vm, propName) {
+    // v-bind:id="uid"
+    const value = this.getExprVal(vm, expr)
+    this.updater.bindUpdater(node, propName, value)
+    this.removeDir(node, 'bind', propName)
   },
   on(node, expr, vm, eventName) {
-
+    // v-on:click="handler"
+    node.addEventListener(eventName, vm.$options.methods[expr].bind(vm))
+    this.removeDir(node, 'on', eventName)
   },
   updater: {
     textUpdater(node, value) {
@@ -29,6 +44,9 @@ const CompileUtil = {
     },
     htmlUpdater(node, value) {
       node.innerHTML = value
+    },
+    bindUpdater(node, propName, value) {
+      node.setAttribute(propName, value)
     },
     mustacheUpdater(node, value, mustacheExpr) {
       console.log(`replace: ${mustacheExpr} with: ${value}`)
@@ -84,9 +102,9 @@ class Compiler {
       // v-text="msg" v-on:click="handle"
       if (this.isDirective(attrName)) {
         const [, dir] = attrName.split('v-')
-        const [directive, eventName] = dir.split(':')
-        console.log('指令：', directive, '事件名：', eventName)
-        CompileUtil[directive](node, attr.value, this.vm)
+        const [directive, propName] = dir.split(':')
+        console.log('指令：', directive, '事件名|特性名：', propName)
+        CompileUtil[directive](node, attr.value, this.vm, propName)
         // node.removeAttributeNode(attr)
       }
     })

@@ -7,7 +7,7 @@
 </head>
 <body>
   <div id="app">
-    <p>{{msg}}  静态文本</p>
+    <p v-bind:id="pid">{{msg}}  静态文本</p>
     <div>
       <span v-text="label"></span>
       <!-- 这是注释-->
@@ -23,6 +23,7 @@
     const app = new MVue({
       el: '#app',
       data: {
+        pid: 'pid134',
         msg: 'hello vue2',
         user: {
           name: 'siki', age: 14
@@ -32,7 +33,7 @@
       },
       methods: {
         handleClick() {
-          this.user.age++
+          this.user.age ++
         }
       },
     })
